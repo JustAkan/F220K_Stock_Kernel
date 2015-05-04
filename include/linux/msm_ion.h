@@ -1,7 +1,6 @@
 /*
- * include/linux/ion.h
  *
- * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -40,6 +39,7 @@ enum ion_heap_ids {
 	ION_CP_MFC_HEAP_ID = 12,
 	ION_CP_WB_HEAP_ID = 16, /* 8660 only */
 	ION_CAMERA_HEAP_ID = 20, /* 8660 only */
+	ION_SYSTEM_CONTIG_HEAP_ID = 21,
 	ION_ADSP_HEAP_ID = 22,
 	ION_SF_HEAP_ID = 24,
 	ION_IOMMU_HEAP_ID = 25,
@@ -72,7 +72,20 @@ enum cp_mem_usage {
 /**
  * Flag to use when allocating to indicate that a heap is secure.
  */
-#define ION_SECURE (1 << ION_HEAP_ID_RESERVED)
+#define ION_FLAG_SECURE (1 << ION_HEAP_ID_RESERVED)
+
+/**
+ * Flag for clients to force contiguous memort allocation
+ *
+ * Use of this flag is carefully monitored!
+ */
+#define ION_FLAG_FORCE_CONTIGUOUS (1 << 30)
+
+/**
+* Deprecated! Please use the corresponding ION_FLAG_*
+*/
+#define ION_SECURE ION_FLAG_SECURE
+#define ION_FORCE_CONTIGUOUS ION_FLAG_FORCE_CONTIGUOUS
 
 /**
  * Macro should be used with ion_heap_ids defined above.
@@ -81,6 +94,7 @@ enum cp_mem_usage {
 
 #define ION_ADSP_HEAP_NAME	"adsp"
 #define ION_VMALLOC_HEAP_NAME	"vmalloc"
+#define ION_KMALLOC_HEAP_NAME	"kmalloc"
 #define ION_AUDIO_HEAP_NAME	"audio"
 #define ION_SF_HEAP_NAME	"sf"
 #define ION_MM_HEAP_NAME	"mm"
@@ -104,12 +118,6 @@ enum cp_mem_usage {
  * defer un-mapping from the IOMMU until the buffer memory is freed.
  */
 #define ION_IOMMU_UNMAP_DELAYED 1
-
-/*
- * This flag allows clients to defer unsecuring a buffer until the buffer
- * is actually freed.
- */
-#define ION_UNSECURE_DELAYED	1
 
 /**
  * struct ion_cp_heap_pdata - defines a content protection heap in the given
@@ -136,6 +144,7 @@ enum cp_mem_usage {
  *			goes from 1 -> 0
  * @setup_region:	function to be called upon ion registration
  * @memory_type:Memory type used for the heap
+ * @no_nonsecure_alloc: don't allow non-secure allocations from this heap
  *
  */
 struct ion_cp_heap_pdata {
@@ -154,6 +163,7 @@ struct ion_cp_heap_pdata {
 	int (*release_region)(void *);
 	void *(*setup_region)(void);
 	enum ion_memory_types memory_type;
+	int no_nonsecure_alloc;
 };
 
 /**
@@ -226,26 +236,6 @@ int msm_ion_secure_heap_2_0(int heap_id, enum cp_mem_usage usage);
  * Returns 0 on success
  */
 int msm_ion_unsecure_heap_2_0(int heap_id, enum cp_mem_usage usage);
-
-/**
- * msm_ion_secure_buffer - secure an individual buffer
- *
- * @client - client who has access to the buffer
- * @handle - buffer to secure
- * @usage - usage hint to TZ
- * @flags - flags for the securing
- */
-int msm_ion_secure_buffer(struct ion_client *client, struct ion_handle *handle,
-				enum cp_mem_usage usage, int flags);
-
-/**
- * msm_ion_unsecure_buffer - unsecure an individual buffer
- *
- * @client - client who has access to the buffer
- * @handle - buffer to secure
- */
-int msm_ion_unsecure_buffer(struct ion_client *client,
-				struct ion_handle *handle);
 #else
 static inline int msm_ion_secure_heap(int heap_id)
 {
