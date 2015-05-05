@@ -28,7 +28,7 @@
 
 #include <mach/board_lge.h>
 
-#include <linux/platform_data/ram_console.h>
+#include <ram_console.h>
 
 #ifdef CONFIG_LGE_PM
 #include CONFIG_BOARD_HEADER_FILE
@@ -36,10 +36,6 @@
 
 #ifdef CONFIG_LGE_BOOT_TIME_CHECK
 #include "lge_boot_time_checker.h"
-#endif
-
-#ifdef CONFIG_KEXEC_HARDBOOT
-#include <linux/memblock.h>
 #endif
 
 /* setting whether uart console is enalbed or disabled */
@@ -160,7 +156,7 @@ int lge_pm_get_cable_info(struct chg_cable_info *cable_info)
 	struct chg_cable_info_table *table;
 	int table_size = ARRAY_SIZE(pm8921_acc_cable_type_data);
 	int acc_read_value = 0;
-	int acc_read_value_data[5] = {0};
+	int acc_read_value_data[5] = {0,};
 	int i, j, rc;
 	int count = 5;
 
@@ -188,20 +184,22 @@ int lge_pm_get_cable_info(struct chg_cable_info *cable_info)
 
 		acc_read_value_data[i] = (int)result.physical;
 		pr_info("%s: acc_read_value - %d\n", __func__, (int)result.physical);
-
-
-		for(j = 0; j < i; j++)
-		{
-			if(abs(acc_read_value_data[i] - acc_read_value_data[i-j-1]) > 100000)
+		if (lge_get_boot_mode() == LGE_BOOT_MODE_NORMAL) {
+			for(j = 0; j < i; j++)
 			{
-				count = 0;
-				acc_read_value = 1800000;
-				pr_info("%s: abnormal acc_read_value\n", __func__);
-				break;
-			}
-			else
-				acc_read_value = (int)result.physical;
+				if(abs(acc_read_value_data[i] - acc_read_value_data[i-j-1]) > 100000)
+				{
+					count = 0;
+					acc_read_value = 1800000;
+					pr_info("%s: abnormal acc_read_value\n", __func__);
+					break;
+				}
+				else
+					acc_read_value = (int)result.physical;
 
+			}
+		} else {
+			acc_read_value = (int)result.physical;
 		}
 		mdelay(10);
 	}
@@ -493,16 +491,6 @@ void __init lge_add_persistent_ram(void)
 
 void __init lge_reserve(void)
 {
-#ifdef CONFIG_KEXEC_HARDBOOT
-	// Reserve space for hardboot page, just before the ram_console
-	struct membank* bank = &meminfo.bank[0];
-	phys_addr_t start = bank->start + bank->size - SZ_1M - LGE_PERSISTENT_RAM_SIZE;
-	int ret = memblock_remove(start, SZ_1M);
-	if(!ret)
-		pr_info("Hardboot page reserved at 0x%X\n", start);
-	else
-		pr_err("Failed to reserve space for hardboot page at 0x%X!\n", start);
-#endif
 	lge_add_persistent_ram();
 }
 
@@ -578,7 +566,7 @@ void __init lge_add_panic_handler_devices(void)
 {
 	platform_device_register(&panic_handler_device);
 }
-#endif /*                          */
+#endif /* CONFIG_LGE_CRASH_HANDLER */
 
 #ifdef CONFIG_LGE_ECO_MODE
 static struct platform_device lge_kernel_device = {
