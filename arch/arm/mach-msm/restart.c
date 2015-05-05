@@ -64,22 +64,6 @@ void *lge_error_handler_cookie_addr;
 static int ssr_magic_number = 0;
 #endif
 
-<<<<<<< HEAD
-=======
-#ifdef CONFIG_LGE_HANDLE_PANIC
-/*
- * Magic number for LGE Error handler
- */
-#define LGE_ERROR_HANDLE_MAGIC_NUM	0xA97F2C46
-/*
- * Need to check offset address in SBL3 (struct boot_shared_imem_cookies_type)
- */
-#define LGE_ERROR_HANDLE_MAGIC_ADDR	0x18
-void *lge_error_handle_cookie_addr;
-static int subsys_crash_magic = 0;
-#endif // CONFIG_LGE_HANDLE_PANIC
-
->>>>>>> 3a55117... kexec: Hardboot support for j1 boards
 static int restart_mode;
 void *restart_reason;
 
@@ -138,13 +122,8 @@ static int dload_set(const char *val, struct kernel_param *kp)
 	}
 
 	set_dload_mode(download_mode);
-<<<<<<< HEAD
 #ifdef CONFIG_LGE_CRASH_HANDLER
 	ssr_magic_number = 0;
-=======
-#ifdef CONFIG_LGE_HANDLE_PANIC
-	subsys_crash_magic = 0;
->>>>>>> 3a55117... kexec: Hardboot support for j1 boards
 #endif
 
 	return 0;
@@ -226,11 +205,7 @@ static irqreturn_t resout_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-<<<<<<< HEAD
 #ifdef CONFIG_LGE_CRASH_HANDLER
-=======
-#ifdef CONFIG_LGE_HANDLE_PANIC
->>>>>>> 3a55117... kexec: Hardboot support for j1 boards
 #define SUBSYS_NAME_MAX_LENGTH	40
 
 int get_ssr_magic_number(void)

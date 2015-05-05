@@ -766,34 +766,7 @@ static void __init apq8064_reserve(void)
 		ext_resolution);
 #endif /* CONFIG_MACH_LGE */
 	msm_reserve();
-<<<<<<< HEAD
 	lge_reserve();
-=======
-	if (apq8064_fmem_pdata.size) {
-#if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-		if (reserve_info->fixed_area_size) {
-			apq8064_fmem_pdata.phys =
-				reserve_info->fixed_area_start + MSM_MM_FW_SIZE;
-			pr_info("mm fw at %lx (fixed) size %x\n",
-				reserve_info->fixed_area_start, MSM_MM_FW_SIZE);
-			pr_info("fmem start %lx (fixed) size %lx\n",
-				apq8064_fmem_pdata.phys,
-				apq8064_fmem_pdata.size);
-		}
-#endif
-	}
-	lge_reserve();
-}
-
-static void __init place_movable_zone(void)
-{
-#ifdef CONFIG_ENABLE_DMM
-	movable_reserved_start = apq8064_reserve_info.low_unstable_address;
-	movable_reserved_size = apq8064_reserve_info.max_unstable_size;
-	pr_info("movable zone start %lx size %lx\n",
-		movable_reserved_start, movable_reserved_size);
-#endif
->>>>>>> 3a55117... kexec: Hardboot support for j1 boards
 }
 
 static void __init apq8064_early_reserve(void)
@@ -4116,13 +4089,12 @@ static void __init apq8064_common_init(void)
 		platform_device_register(&msm_8960_riva);
 #endif
 	}
+#ifdef CONFIG_ANDROID_RAM_CONSOLE
 	lge_add_ramconsole_devices();
-<<<<<<< HEAD
 #endif
 #ifdef CONFIG_LGE_CRASH_HANDLER
-=======
->>>>>>> 3a55117... kexec: Hardboot support for j1 boards
 	lge_add_panic_handler_devices();
+#endif
 #ifdef CONFIG_LGE_BOOT_TIME_CHECK
 	lge_add_boot_time_checker();
 #endif
